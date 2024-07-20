@@ -1,4 +1,5 @@
 package com.yupi.springbootinit.controller;
+import java.util.Date;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.json.JSONUtil;
@@ -253,35 +254,51 @@ public class ChartController {
         String chartType = genChartByAiRequest.getChartType();
         ThrowUtils.throwIf(StringUtils.isBlank(goal),ErrorCode.PARAMS_ERROR,"目标为空");
         ThrowUtils.throwIf(StringUtils.isNotBlank(name) && name.length()>100,ErrorCode.PARAMS_ERROR,"名称过长");
-
+        User loginUser = userService.getLoginUser(request);
 //        分析需求：
-//        分析网站用户的增长情况
+//        分析网站用户的增长情况  goal
 //        原始数据：
-//        日期,用户数
+//        日期,用户数   docsv
 //        1号,10
 //        2号,20
 //        3号,30
-        long modeId=1774017342708547585L;
+        long biModeId=CommonConstant.BI_MODEL_ID;
 
         StringBuilder userInput=new StringBuilder();
         userInput.append("分析需求：").append("\n");
-        userInput.append(goal).append("\n");
+        String userGoal=goal;
+        if (StringUtils.isNotBlank(chartType)){
+            userGoal += "，请使用"+chartType;
+        }
+        userInput.append(userGoal).append("\n");
         userInput.append("数据：").append("\n");
         String docsv = ExcelUtils.excelTocsv(multipartFile);
         userInput.append(docsv).append("\n");
 
 
-        String result = aiManager.doChat(modeId, userInput.toString());
+        String result = aiManager.doChat(biModeId, userInput.toString());
         String[] splits = result.split("【【【【【");
         if (result.length()<3){
         throw new BusinessException(ErrorCode.SYSTEM_ERROR,"Ai生成错误");
         }
-        String genChart=splits[1];
-        String genResult=splits[2];
+        String genChart=splits[1].trim();
+        String genResult=splits[2].trim();
         BiResponse biResponse=new BiResponse();
         biResponse.setGenChart(genChart);
         biResponse.setGenResult(genResult);
 
+        //生成数据插入数据库
+        Chart chart=new Chart();
+        chart.setGoal(goal);
+        chart.setName(name);
+        chart.setChartData(docsv);
+        chart.setChartType(chartType);
+        chart.setGenChart(genChart);
+        chart.setGenResult(genResult);
+        chart.setUserId(loginUser.getId());
+        boolean chartSave = chartService.save(chart);
+
+        ThrowUtils.throwIf(!chartSave,ErrorCode.SYSTEM_ERROR,"图表保存失败");
         return ResultUtils.success(biResponse);
 
 //        String biz = genChartByAiRequest.getBiz();
