@@ -50,6 +50,11 @@ public class Chart implements Serializable {
     private String genResult;
 
     /**
+     * 图表状态
+     */
+    private String status = "succeed";
+
+    /**
      * 用户id
      */
     private Long userId;

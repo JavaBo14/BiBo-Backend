@@ -1,7 +1,9 @@
 package com.yupi.springbootinit.controller;
+import java.util.Arrays;
 import java.util.Date;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -16,6 +18,7 @@ import com.yupi.springbootinit.constant.UserConstant;
 import com.yupi.springbootinit.exception.BusinessException;
 import com.yupi.springbootinit.exception.ThrowUtils;
 import com.yupi.springbootinit.manager.AiManager;
+import com.yupi.springbootinit.mapper.ChartMapper;
 import com.yupi.springbootinit.model.dto.chart.*;
 import com.yupi.springbootinit.model.dto.file.UploadFileRequest;
 import com.yupi.springbootinit.model.entity.Chart;
@@ -38,6 +41,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * 帖子接口
@@ -58,6 +62,9 @@ public class ChartController {
 
     @Resource
     private AiManager aiManager;
+
+    @Resource
+    private ChartMapper chartMapper;
 
     // region 增删改查
 
@@ -192,7 +199,7 @@ public class ChartController {
      * @return
      */
     @PostMapping("/my/list/page")
-    public BaseResponse<Page<Chart>> listMyChartVOByPage(@RequestBody ChartQueryRequest chartQueryRequest,
+    public BaseResponse<Page<Chart>> listMyChartByPage(@RequestBody ChartQueryRequest chartQueryRequest,
             HttpServletRequest request) {
         if (chartQueryRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -252,8 +259,18 @@ public class ChartController {
         String goal = genChartByAiRequest.getGoal();
         String name = genChartByAiRequest.getName();
         String chartType = genChartByAiRequest.getChartType();
+        //校验
         ThrowUtils.throwIf(StringUtils.isBlank(goal),ErrorCode.PARAMS_ERROR,"目标为空");
         ThrowUtils.throwIf(StringUtils.isNotBlank(name) && name.length()>100,ErrorCode.PARAMS_ERROR,"名称过长");
+        //校验文件大小
+        long size = multipartFile.getSize();
+        String originalFilename = multipartFile.getOriginalFilename();
+        ThrowUtils.throwIf(size>CommonConstant.ONE_MB,ErrorCode.PARAMS_ERROR,"目标文件过大");
+        //检查文件后缀
+        String suffix = FileUtil.getSuffix(originalFilename);
+        final List<String> suffixList= Arrays.asList("npg","jpg");
+        ThrowUtils.throwIf(suffixList.contains(suffix),ErrorCode.PARAMS_ERROR,"文件格式错误");
+
         User loginUser = userService.getLoginUser(request);
 //        分析需求：
 //        分析网站用户的增长情况  goal
@@ -277,6 +294,7 @@ public class ChartController {
 
 
         String result = aiManager.doChat(biModeId, userInput.toString());
+//        String result="";
         String[] splits = result.split("【【【【【");
         if (result.length()<3){
         throw new BusinessException(ErrorCode.SYSTEM_ERROR,"Ai生成错误");
@@ -340,26 +358,25 @@ public class ChartController {
      * @param chartQueryRequest
      * @return
      */
-        private QueryWrapper<Chart> getQueryWrapper(ChartQueryRequest chartQueryRequest) {
+    private QueryWrapper<Chart> getQueryWrapper(ChartQueryRequest chartQueryRequest) {
         QueryWrapper<Chart> queryWrapper = new QueryWrapper<>();
         if (chartQueryRequest == null) {
             return queryWrapper;
         }
         Long id = chartQueryRequest.getId();
+        String name = chartQueryRequest.getName();
         String goal = chartQueryRequest.getGoal();
-        String name=chartQueryRequest.getName();
         String chartType = chartQueryRequest.getChartType();
         Long userId = chartQueryRequest.getUserId();
         String sortField = chartQueryRequest.getSortField();
         String sortOrder = chartQueryRequest.getSortOrder();
 
-        // 拼接查询条件
-        queryWrapper.eq(id!=null && id>0,"id",id);
-        queryWrapper.eq(StringUtils.isAnyBlank(goal),"goal",goal);
-        queryWrapper.like(StringUtils.isAnyBlank(name),"name",name);
-        queryWrapper.eq(StringUtils.isAnyBlank(chartType),"chartType",chartType);
+        queryWrapper.eq(id != null && id > 0, "id", id);
+        queryWrapper.like(StringUtils.isNotBlank(name), "name", name);
+        queryWrapper.eq(StringUtils.isNotBlank(goal), "goal", goal);
+        queryWrapper.eq(StringUtils.isNotBlank(chartType), "chartType", chartType);
         queryWrapper.eq(ObjectUtils.isNotEmpty(userId), "userId", userId);
-        queryWrapper.eq("isDelete",false);
+        queryWrapper.eq("isDelete", false);
         queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
                 sortField);
         return queryWrapper;
