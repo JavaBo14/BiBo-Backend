@@ -42,6 +42,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 帖子接口
@@ -268,8 +269,8 @@ public class ChartController {
         ThrowUtils.throwIf(size>CommonConstant.ONE_MB,ErrorCode.PARAMS_ERROR,"目标文件过大");
         //检查文件后缀
         String suffix = FileUtil.getSuffix(originalFilename);
-        final List<String> suffixList= Arrays.asList("npg","jpg");
-        ThrowUtils.throwIf(suffixList.contains(suffix),ErrorCode.PARAMS_ERROR,"文件格式错误");
+        final List<String> suffixList= Arrays.asList("xlsx", "csv","xls");
+        ThrowUtils.throwIf(!suffixList.contains(suffix),ErrorCode.PARAMS_ERROR,"文件格式错误");
 
         User loginUser = userService.getLoginUser(request);
 //        分析需求：
@@ -280,7 +281,7 @@ public class ChartController {
 //        2号,20
 //        3号,30
         long biModeId=CommonConstant.BI_MODEL_ID;
-
+        //拼接分析需求
         StringBuilder userInput=new StringBuilder();
         userInput.append("分析需求：").append("\n");
         String userGoal=goal;
@@ -289,31 +290,44 @@ public class ChartController {
         }
         userInput.append(userGoal).append("\n");
         userInput.append("数据：").append("\n");
-        String docsv = ExcelUtils.excelTocsv(multipartFile);
-        userInput.append(docsv).append("\n");
+        String csvData = ExcelUtils.excelTocsv(multipartFile);
 
+        userInput.append(csvData).append("\n");
 
+       //调用鱼聪明
         String result = aiManager.doChat(biModeId, userInput.toString());
-//        String result="";
+
+//      String result = aiManager.sendMesToAIUseXingHuo(userInput.toString());
         String[] splits = result.split("【【【【【");
         if (result.length()<3){
         throw new BusinessException(ErrorCode.SYSTEM_ERROR,"Ai生成错误");
         }
+
+        Long userId=loginUser.getId();
+        //用户数据分表保存
+        chartService.saveChartData(userId, csvData,chartType);
+
         String genChart=splits[1].trim();
         String genResult=splits[2].trim();
+
+        //原数据返回给前端
+        List<Map<String, Object>> data = chartService.getChartDataByUserId(userId);
+
         BiResponse biResponse=new BiResponse();
         biResponse.setGenChart(genChart);
         biResponse.setGenResult(genResult);
+        biResponse.setData(data);
+
 
         //生成数据插入数据库
         Chart chart=new Chart();
         chart.setGoal(goal);
         chart.setName(name);
-        chart.setChartData(docsv);
+//        chart.setChartData(csvData);
         chart.setChartType(chartType);
         chart.setGenChart(genChart);
         chart.setGenResult(genResult);
-        chart.setUserId(loginUser.getId());
+        chart.setUserId(userId);
         boolean chartSave = chartService.save(chart);
 
         ThrowUtils.throwIf(!chartSave,ErrorCode.SYSTEM_ERROR,"图表保存失败");

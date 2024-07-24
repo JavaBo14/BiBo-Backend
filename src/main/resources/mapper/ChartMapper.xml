@@ -24,4 +24,61 @@
         chartType,genChart,genResult,
         createTime,updateTime,isDelete,userId,status
     </sql>
+
+
+
+<!--    <select id="getChartDataByUserId" resultType="Map">-->
+<!--        SELECT *-->
+<!--        FROM-->
+<!--            (SELECT CONCAT('chart_', #{userId}, '_data', COALESCE(-->
+<!--                    (SELECT MAX(CAST(SUBSTRING_INDEX(table_name, '_', -1) AS UNSIGNED))-->
+<!--                     FROM information_schema.tables-->
+<!--                     WHERE table_name LIKE CONCAT('chart_', #{userId}, '_data%')-->
+<!--                    ), 1)) AS table_name) as t-->
+<!--    </select>-->
+
+    <select id="getLastChartIdByUserId" resultType="java.lang.Integer">
+        SELECT MAX(CAST(REGEXP_REPLACE(SUBSTRING_INDEX(table_name, '_', -1), '^data', '') AS UNSIGNED)) AS max_id
+        FROM information_schema.tables
+        WHERE table_name LIKE CONCAT('chart_', #{userId}, '_data%')
+    </select>
+
+    <sql id="sanitizeColumnName">
+    <![CDATA[
+        REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+        #columnName#, '[^a-zA-Z0-9_]', ''),
+        '^\\d+', ''),
+        '\\s+', '_'),
+        '^[^a-zA-Z_]', ''),
+        'col_', UNIX_TIMESTAMP())
+        ]]>
+  </sql>
+
+
+
+    <update id="createTable">
+        CREATE TABLE ${tableName} (
+        <foreach collection="columns" item="column" separator=",">
+            ${column} VARCHAR(255)
+        </foreach>
+        )
+    </update>
+
+
+    <insert id="insertData">
+        INSERT INTO ${tableName} (
+        <foreach collection="columns" item="column" separator=",">
+            ${column}
+        </foreach>
+        ) VALUES
+        <foreach collection="values" item="row" separator=",">
+            (
+            <foreach collection="row" item="value" separator=",">
+                #{value}
+            </foreach>
+            )
+        </foreach>
+    </insert>
+
+
 </mapper>

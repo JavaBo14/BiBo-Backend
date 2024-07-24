@@ -24,6 +24,7 @@ spring:
     url: jdbc:mysql://localhost:3306/bobi
     username: root
     password: 1014
+
   # Redis 配置
   # todo 需替换配置，然后取消注释
 #  redis:
@@ -107,3 +108,9 @@ yuapi:
   client:
     access-key: smwe53dlo1kdc23txi9dnux78p9qypsr
     secret-key: t97pzp81yin5uk4t77t7qp99lrsh7erh
+#讯飞
+xunfei:
+  client:
+    appid: 2840692b
+    apiSecret: ZDU2ZTRhNWJjZTU4YTdmZTUzNWMwYWQ4
+    apiKey: 80a3c09bf181476ccf01812d336c7fe1

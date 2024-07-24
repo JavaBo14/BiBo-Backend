@@ -3,6 +3,9 @@ package com.yupi.springbootinit.service;
 import com.yupi.springbootinit.model.entity.Chart;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.List;
+import java.util.Map;
+
 /**
 * @author Bo
 * @description 针对表【chart(图表信息表)】的数据库操作Service
@@ -10,4 +13,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface ChartService extends IService<Chart> {
 
+    void saveChartData(Long userId, String csvData,String chartType);
+
+    List<Map<String, Object>> getChartDataByUserId(Long userId);
 }
