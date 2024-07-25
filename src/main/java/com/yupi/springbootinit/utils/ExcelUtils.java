@@ -12,8 +12,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 @Slf4j
 public class ExcelUtils {
-    public static String excelTocsv(MultipartFile multipartFile){
-        // 读取数据
+    public static String excelTocsv(MultipartFile multipartFile) {
         List<Map<Integer, String>> list = new ArrayList<>();
         try {
             list = EasyExcel.read(multipartFile.getInputStream())

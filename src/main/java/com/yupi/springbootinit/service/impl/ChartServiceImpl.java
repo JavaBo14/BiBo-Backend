@@ -8,8 +8,6 @@ import com.yupi.springbootinit.exception.ThrowUtils;
 import com.yupi.springbootinit.model.entity.Chart;
 import com.yupi.springbootinit.service.ChartService;
 import com.yupi.springbootinit.mapper.ChartMapper;
-import com.yupi.springbootinit.utils.CheckForDuplicateCsvDataUtils;
-import com.yupi.springbootinit.utils.YoudaoTranslatorUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,63 +29,84 @@ import java.util.Map;
 @Slf4j
 @Service
 public class ChartServiceImpl extends ServiceImpl<ChartMapper, Chart>
-    implements ChartService{
+    implements ChartService {
     @Resource
     private ChartMapper chartMapper;
+
     @Override
-    public void saveChartData(Long userId, String csvData,String chartType) {
-        Integer lastChartId = chartMapper.getLastChartIdByUserId(userId);
+    public void saveChartData(Long userId, String csvData, String chartType) {
+        // 获取现有表名
+        List<String> existingTableNames = chartMapper.getExistingTableNames(userId);
 
-        Integer newId = (lastChartId == null) ? 1 : lastChartId + 1;
-
-        //类型转换英文
-//        String translatedChartType = YoudaoTranslatorUtils.translateChartType(chartType);
-
-        String tableName = "chart_" + userId + "_data" + newId;
-
+        // 解析 CSV 数据
         BufferedReader reader = new BufferedReader(new StringReader(csvData));
-        String headerLine = null;
+        String headerLine;
         try {
             headerLine = reader.readLine();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("读取 CSV 数据错误", e);
         }
         if (headerLine == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "CSV数据为空");
         }
 
+        // 解析列
         List<String> columns = Arrays.asList(headerLine.split(","));
         List<List<String>> values = new ArrayList<>();
 
         String line;
         while (true) {
             try {
-                if (!((line = reader.readLine()) != null)) break;
+                if ((line = reader.readLine()) == null) break;
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException("读取 CSV 数据错误", e);
             }
-            List<String> row = Arrays.asList(line.split(","));
+
+            // 使用 ArrayList 替代 Arrays.asList
+            List<String> row = new ArrayList<>(Arrays.asList(line.split(",")));
+
+            // 填充空值
+            while (row.size() < columns.size()) {
+                row.add(null); // 或者 "" 视具体需求而定
+            }
+
             values.add(row);
         }
 
-        //检验csvData数据
-        if (StringUtils.isEmpty(csvData)) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "CSV 数据为空");
+        // 计算新数据的总量
+        int newDataCount = values.size() * columns.size(); // 每个数据项的计数
+
+        // 检查数据是否重复
+        for (String tableName : existingTableNames) {
+            int existingDataCount = chartMapper.getTableDataCount(tableName);
+            if (newDataCount == existingDataCount) {
+                // 如果数据总量相同，认为数据重复，不进行操作
+                return;
+            }
         }
 
-        // 检查 CSV 数据是否重复
-        boolean isDuplicate = CheckForDuplicateCsvDataUtils.checkForDuplicateCsvData(csvData);
+        // 生成新表名
+        Integer lastChartId = chartMapper.getLastChartIdByUserId(userId);
+        Integer newId = (lastChartId == null) ? 1 : lastChartId + 1;
+        String newTableName = "chart_" + userId + "_data" + newId;
 
-        if (!isDuplicate) {
-            chartMapper.createTable(tableName, columns);
-            chartMapper.insertData(tableName, columns, values);
+        // 动态生成列定义
+        List<String> columnDefinitions = new ArrayList<>();
+        for (String column : columns) {
+            columnDefinitions.add(column + " VARCHAR(255)");
         }
+
+        // 创建新表
+        chartMapper.createTable(newTableName, columnDefinitions);
+
+        // 插入数据
+        chartMapper.insertData(newTableName, columns, values);
     }
 
     public List<Map<String, Object>> getChartDataByUserId(Long userId) {
         // 查询用户的最后一个 ID
         Integer lastId = chartMapper.getLastChartIdByUserId(userId);
-//        int nextId = (lastId != null) ? lastId + 1 : 1;
+        //        int nextId = (lastId != null) ? lastId + 1 : 1;
         // 查询数据
         List<Map<String, Object>> chartDataByUserId = chartMapper.getChartDataByUserId(userId, lastId);
         return chartDataByUserId;

@@ -295,9 +295,37 @@ public class ChartController {
         userInput.append(csvData).append("\n");
 
        //调用鱼聪明
-        String result = aiManager.doChat(biModeId, userInput.toString());
+//        String result = aiManager.doChat(biModeId, userInput.toString());
 
 //      String result = aiManager.sendMesToAIUseXingHuo(userInput.toString());
+
+        String result="【【【【【\n" +
+                "{\n" +
+                "    \"title\": {\n" +
+                "        \"text\": \"网站用户增长情况\",\n" +
+                "        \"subtext\": \"\"\n" +
+                "    },\n" +
+                "    \"tooltip\": {\n" +
+                "        \"trigger\": \"axis\",\n" +
+                "        \"axisPointer\": {\n" +
+                "            \"type\": \"shadow\"\n" +
+                "        }\n" +
+                "    },\n" +
+                "    \"legend\": {\n" +
+                "        \"data\": [\"用户数\"]\n" +
+                "    },\n" +
+                "    \"xAxis\": {\n" +
+                "        \"data\": [\"1号\", \"2号\", \"3号\"]\n" +
+                "    },\n" +
+                "    \"yAxis\": {},\n" +
+                "    \"series\": [{\n" +
+                "        \"name\": \"用户数\",\n" +
+                "        \"type\": \"bar\",\n" +
+                "        \"data\": [10, 20, 30]\n" +
+                "    }]\n" +
+                "}\n" +
+                "【【【【【\n" +
+                "根据数据分析可得，该网站用户数量逐日增长，时间越长，用户数量增长越多。\n";
         String[] splits = result.split("【【【【【");
         if (result.length()<3){
         throw new BusinessException(ErrorCode.SYSTEM_ERROR,"Ai生成错误");

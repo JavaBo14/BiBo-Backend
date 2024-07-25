@@ -37,11 +37,7 @@
 <!--                    ), 1)) AS table_name) as t-->
 <!--    </select>-->
 
-    <select id="getLastChartIdByUserId" resultType="java.lang.Integer">
-        SELECT MAX(CAST(REGEXP_REPLACE(SUBSTRING_INDEX(table_name, '_', -1), '^data', '') AS UNSIGNED)) AS max_id
-        FROM information_schema.tables
-        WHERE table_name LIKE CONCAT('chart_', #{userId}, '_data%')
-    </select>
+
 
     <sql id="sanitizeColumnName">
     <![CDATA[
@@ -56,27 +52,48 @@
 
 
 
+<!--    &lt;!&ndash; 获取现有表名 &ndash;&gt;-->
+<!--    <select id="getExistingTableNames" parameterType="long" resultType="string">-->
+<!--        SELECT table_name-->
+<!--        FROM information_schema.tables-->
+<!--        WHERE table_schema = DATABASE()-->
+<!--          AND table_name LIKE CONCAT('chart_', #{userId}, '_data%')-->
+<!--    </select>-->
+
+<!--    &lt;!&ndash; 获取表的行数 &ndash;&gt;-->
+<!--    <select id="getTableRowCount" resultType="int">-->
+<!--        SELECT COUNT(*)-->
+<!--        FROM ${tableName}-->
+<!--    </select>-->
+
+<!--    &lt;!&ndash; 统计每列的非空数据数量 &ndash;&gt;-->
+<!--    <select id="countNonNullValues" parameterType="map" resultType="int">-->
+<!--        SELECT COUNT(${columnName}) FROM ${tableName}-->
+<!--    </select>-->
+
+    <!-- 获取用户的最后一个图表ID -->
+    <select id="getLastChartIdByUserId" resultType="java.lang.Integer">
+        SELECT MAX(CAST(REGEXP_REPLACE(SUBSTRING_INDEX(table_name, '_', -1), '^data', '') AS UNSIGNED)) AS max_id
+        FROM information_schema.tables
+        WHERE table_name LIKE CONCAT('chart_', #{userId}, '_data%')
+    </select>
+
+    <!-- 创建表 -->
     <update id="createTable">
         CREATE TABLE ${tableName} (
         <foreach collection="columns" item="column" separator=",">
-            ${column} VARCHAR(255)
+            ${column}
         </foreach>
         )
     </update>
 
-
+    <!-- 插入数据 -->
     <insert id="insertData">
-        INSERT INTO ${tableName} (
-        <foreach collection="columns" item="column" separator=",">
-            ${column}
-        </foreach>
-        ) VALUES
+        INSERT INTO ${tableName}
+        (<foreach collection="columns" item="column" separator=",">${column}</foreach>)
+        VALUES
         <foreach collection="values" item="row" separator=",">
-            (
-            <foreach collection="row" item="value" separator=",">
-                #{value}
-            </foreach>
-            )
+            (<foreach collection="row" item="value" separator=",">#{value}</foreach>)
         </foreach>
     </insert>
 
