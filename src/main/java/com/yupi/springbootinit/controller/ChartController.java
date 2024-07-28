@@ -18,6 +18,7 @@ import com.yupi.springbootinit.constant.UserConstant;
 import com.yupi.springbootinit.exception.BusinessException;
 import com.yupi.springbootinit.exception.ThrowUtils;
 import com.yupi.springbootinit.manager.AiManager;
+import com.yupi.springbootinit.manager.RedisLimiterManager;
 import com.yupi.springbootinit.mapper.ChartMapper;
 import com.yupi.springbootinit.model.dto.chart.*;
 import com.yupi.springbootinit.model.dto.file.UploadFileRequest;
@@ -66,6 +67,9 @@ public class ChartController {
 
     @Resource
     private ChartMapper chartMapper;
+
+    @Resource
+    private RedisLimiterManager redisLimiterManager;
 
     // region 增删改查
 
@@ -273,6 +277,9 @@ public class ChartController {
         ThrowUtils.throwIf(!suffixList.contains(suffix),ErrorCode.PARAMS_ERROR,"文件格式错误");
 
         User loginUser = userService.getLoginUser(request);
+
+        // 限流判断，每个用户一个限流器
+        redisLimiterManager.doRateLimit("genChartByAi_" + loginUser.getId());
 //        分析需求：
 //        分析网站用户的增长情况  goal
 //        原始数据：

@@ -38,8 +38,8 @@ public class AiManager {
         }
         return response.getData().getContent();
     }
-    @Resource
-    private SparkClient sparkClient;
+//    @Resource
+//    private SparkClient sparkClient;
 
     /**
      * 向讯飞AI发送请求
