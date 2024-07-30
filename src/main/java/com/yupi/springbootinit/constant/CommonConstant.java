@@ -20,5 +20,5 @@ public interface CommonConstant {
 
     long BI_MODEL_ID = 1814235204440489985L;
 
-    long ONE_MB=1024* 1024 * 1024L;
+    long ONE_MB=1* 1024 * 1024L;
 }
