@@ -22,14 +22,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
-* @author Bo
-* @description 针对表【chart(图表信息表)】的数据库操作Service实现
-* @createDate 2024-06-12 21:16:57
-*/
+ * @author Bo
+ * @description 针对表【chart(图表信息表)】的数据库操作Service实现
+ * @createDate 2024-06-12 21:16:57
+ */
 @Slf4j
 @Service
 public class ChartServiceImpl extends ServiceImpl<ChartMapper, Chart>
-    implements ChartService {
+        implements ChartService {
     @Resource
     private ChartMapper chartMapper;
 

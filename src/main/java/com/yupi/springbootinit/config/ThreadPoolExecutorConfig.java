@@ -9,6 +9,9 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * JUC 并发编程包中的 ThreadPoolExecutor 来实现非常灵活地自定义线程池
+ */
 @Configuration
 public class ThreadPoolExecutorConfig {
 

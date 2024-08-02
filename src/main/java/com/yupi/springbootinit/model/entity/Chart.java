@@ -52,7 +52,12 @@ public class Chart implements Serializable {
     /**
      * 图表状态
      */
-    private String status = "succeed";
+    private String status;
+
+    /**
+     * 执行信息
+     */
+    private String execMessage;
 
     /**
      * 用户id
