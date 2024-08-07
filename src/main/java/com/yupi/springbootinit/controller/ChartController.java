@@ -8,6 +8,7 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yupi.springbootinit.annotation.AuthCheck;
+import com.yupi.springbootinit.bizmq.BiMessageProducer;
 import com.yupi.springbootinit.common.BaseResponse;
 import com.yupi.springbootinit.common.DeleteRequest;
 import com.yupi.springbootinit.common.ErrorCode;
@@ -76,6 +77,9 @@ public class ChartController {
 
     @Resource
     private RedisLimiterManager redisLimiterManager;
+
+    @Resource
+    private BiMessageProducer biMessageProducer;
 
     // region 增删改查
 
@@ -308,37 +312,37 @@ public class ChartController {
         userInput.append(csvData).append("\n");
 
        //调用鱼聪明
-//        String result = aiManager.doChat(biModeId, userInput.toString());
+        String result = aiManager.doChat(biModeId, userInput.toString());
 
 //      String result = aiManager.sendMesToAIUseXingHuo(userInput.toString());
 
-        String result="【【【【【\n" +
-                "{\n" +
-                "    \"title\": {\n" +
-                "        \"text\": \"网站用户增长情况\",\n" +
-                "        \"subtext\": \"\"\n" +
-                "    },\n" +
-                "    \"tooltip\": {\n" +
-                "        \"trigger\": \"axis\",\n" +
-                "        \"axisPointer\": {\n" +
-                "            \"type\": \"shadow\"\n" +
-                "        }\n" +
-                "    },\n" +
-                "    \"legend\": {\n" +
-                "        \"data\": [\"用户数\"]\n" +
-                "    },\n" +
-                "    \"xAxis\": {\n" +
-                "        \"data\": [\"1号\", \"2号\", \"3号\"]\n" +
-                "    },\n" +
-                "    \"yAxis\": {},\n" +
-                "    \"series\": [{\n" +
-                "        \"name\": \"用户数\",\n" +
-                "        \"type\": \"bar\",\n" +
-                "        \"data\": [10, 20, 30]\n" +
-                "    }]\n" +
-                "}\n" +
-                "【【【【【\n" +
-                "根据数据分析可得，该网站用户数量逐日增长，时间越长，用户数量增长越多。\n";
+//        String result="【【【【【\n" +
+//                "{\n" +
+//                "    \"title\": {\n" +
+//                "        \"text\": \"网站用户增长情况\",\n" +
+//                "        \"subtext\": \"\"\n" +
+//                "    },\n" +
+//                "    \"tooltip\": {\n" +
+//                "        \"trigger\": \"axis\",\n" +
+//                "        \"axisPointer\": {\n" +
+//                "            \"type\": \"shadow\"\n" +
+//                "        }\n" +
+//                "    },\n" +
+//                "    \"legend\": {\n" +
+//                "        \"data\": [\"用户数\"]\n" +
+//                "    },\n" +
+//                "    \"xAxis\": {\n" +
+//                "        \"data\": [\"1号\", \"2号\", \"3号\"]\n" +
+//                "    },\n" +
+//                "    \"yAxis\": {},\n" +
+//                "    \"series\": [{\n" +
+//                "        \"name\": \"用户数\",\n" +
+//                "        \"type\": \"bar\",\n" +
+//                "        \"data\": [10, 20, 30]\n" +
+//                "    }]\n" +
+//                "}\n" +
+//                "【【【【【\n" +
+//                "根据数据分析可得，该网站用户数量逐日增长，时间越长，用户数量增长越多。\n";
         String[] splits = result.split("【【【【【");
         if (result.length()<3){
         throw new BusinessException(ErrorCode.SYSTEM_ERROR,"Ai生成错误");
@@ -351,13 +355,13 @@ public class ChartController {
         String genChart=splits[1].trim();
         String genResult=splits[2].trim();
 
-        //原数据返回给前端
-        List<Map<String, Object>> data = chartService.getChartDataByUserId(userId);
+//        //原数据返回给前端
+//        List<Map<String, Object>> data = chartService.getChartDataByUserId(userId);
 
         BiResponse biResponse=new BiResponse();
         biResponse.setGenChart(genChart);
         biResponse.setGenResult(genResult);
-        biResponse.setData(data);
+//        biResponse.setData(data);
 
 
         //生成数据插入数据库
@@ -445,7 +449,7 @@ public class ChartController {
 //        1号,10
 //        2号,20
 //        3号,30
-        long biModeId = CommonConstant.BI_MODEL_ID;
+//        long biModeId = CommonConstant.BI_MODEL_ID;
         //拼接分析需求
         StringBuilder userInput = new StringBuilder();
         userInput.append("分析需求：").append("\n");
@@ -465,7 +469,7 @@ public class ChartController {
         Chart chart = new Chart();
         chart.setGoal(goal);
         chart.setName(name);
-//        chart.setChartData(csvData);
+        chart.setChartData(csvData);
         chart.setChartType(chartType);
         chart.setStatus(String.valueOf(ChartStatus.WAIT));
         chart.setUserId(userId);
@@ -473,7 +477,7 @@ public class ChartController {
         ThrowUtils.throwIf(!chartSave, ErrorCode.SYSTEM_ERROR, "图表保存失败");
 
         //用户数据分表保存
-        chartService.saveChartData(userId, csvData, chartType);
+//        chartService.saveChartData(userId, csvData, chartType);
 
         CompletableFuture.runAsync(() -> {
 
@@ -488,7 +492,7 @@ public class ChartController {
                 return;
             }
             //调用鱼聪明
-            String result = aiManager.doChat(biModeId, userInput.toString());
+            String result = aiManager.doChat(CommonConstant.BI_MODEL_ID, userInput.toString());
 
             String[] splits = result.split("【【【【【");
             if (result.length() < 3) {
@@ -512,11 +516,92 @@ public class ChartController {
 
 
         //原数据返回给前端
-        List<Map<String, Object>> data = chartService.getChartDataByUserId(userId);
+//        List<Map<String, Object>> data = chartService.getChartDataByUserId(userId);
 
         BiResponse biResponse = new BiResponse();
         biResponse.setChartId(chart.getId());
-        biResponse.setData(data);
+//        biResponse.setData(data);
+        return ResultUtils.success(biResponse);
+    }
+
+    /**
+     * 智能分析(异步消息队列)
+     *
+     * @param multipartFile
+     * @param genChartByAiRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/gen/async/mq")
+    public BaseResponse<BiResponse> genChartByAiAsyncMq(@RequestPart("file") MultipartFile multipartFile,
+                                                      GenChartByAiRequest genChartByAiRequest, HttpServletRequest request) {
+        String goal = genChartByAiRequest.getGoal();
+        String name = genChartByAiRequest.getName();
+        String chartType = genChartByAiRequest.getChartType();
+        //校验
+        ThrowUtils.throwIf(StringUtils.isBlank(goal), ErrorCode.PARAMS_ERROR, "目标为空");
+        ThrowUtils.throwIf(StringUtils.isNotBlank(name) && name.length() > 100, ErrorCode.PARAMS_ERROR, "名称过长");
+        //校验文件大小
+        long size = multipartFile.getSize();
+        String originalFilename = multipartFile.getOriginalFilename();
+        ThrowUtils.throwIf(size > CommonConstant.ONE_MB, ErrorCode.PARAMS_ERROR, "目标文件过大");
+        //检查文件后缀
+        String suffix = FileUtil.getSuffix(originalFilename);
+        final List<String> suffixList = Arrays.asList("xlsx", "xls");
+        ThrowUtils.throwIf(!suffixList.contains(suffix), ErrorCode.PARAMS_ERROR, "文件格式错误");
+
+        User loginUser = userService.getLoginUser(request);
+
+        // 限流判断，每个用户一个限流器
+        redisLimiterManager.doRateLimit("genChartByAi_" + loginUser.getId());
+//        分析需求：
+//        分析网站用户的增长情况  goal
+//        原始数据：
+//        日期,用户数   docsv
+//        1号,10
+//        2号,20
+//        3号,30
+//        long biModeId = CommonConstant.BI_MODEL_ID;
+        //拼接分析需求
+        StringBuilder userInput = new StringBuilder();
+        userInput.append("分析需求：").append("\n");
+        String userGoal = goal;
+        if (StringUtils.isNotBlank(chartType)) {
+            userGoal += "，请使用" + chartType;
+        }
+        userInput.append(userGoal).append("\n");
+        userInput.append("数据：").append("\n");
+        String csvData = ExcelUtils.excelTocsv(multipartFile);
+
+        userInput.append(csvData).append("\n");
+
+
+        Long userId = loginUser.getId();
+
+        //生成数据插入数据库
+        Chart chart = new Chart();
+        chart.setGoal(goal);
+        chart.setName(name);
+        chart.setChartData(csvData);
+        chart.setChartType(chartType);
+        chart.setStatus(String.valueOf(ChartStatus.WAIT));
+        chart.setUserId(userId);
+        boolean chartSave = chartService.save(chart);
+        ThrowUtils.throwIf(!chartSave, ErrorCode.SYSTEM_ERROR, "图表保存失败");
+
+        //用户数据分表保存
+//        chartService.saveChartData(userId, csvData, chartType);
+
+        Long newChartid = chart.getId();
+        //发送消息
+        biMessageProducer.sendMessage(String.valueOf(newChartid));
+
+        //原数据返回给前端
+//        List<Map<String, Object>> data = chartService.getChartDataByUserId(userId);
+
+        BiResponse biResponse = new BiResponse();
+        biResponse.setChartId(newChartid);
+//        biResponse.setData(data);
         return ResultUtils.success(biResponse);
     }
 
