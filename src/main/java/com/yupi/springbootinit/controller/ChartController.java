@@ -14,6 +14,7 @@ import com.yupi.springbootinit.common.DeleteRequest;
 import com.yupi.springbootinit.common.ErrorCode;
 import com.yupi.springbootinit.common.ResultUtils;
 import com.yupi.springbootinit.constant.CommonConstant;
+import com.yupi.springbootinit.constant.CsvDataConstant;
 import com.yupi.springbootinit.constant.FileConstant;
 import com.yupi.springbootinit.constant.UserConstant;
 import com.yupi.springbootinit.exception.BusinessException;
@@ -80,6 +81,9 @@ public class ChartController {
 
     @Resource
     private BiMessageProducer biMessageProducer;
+
+    @Resource
+    private CsvDataConstant csvDataConstant;
 
     // region 增删改查
 
@@ -538,6 +542,7 @@ public class ChartController {
         String goal = genChartByAiRequest.getGoal();
         String name = genChartByAiRequest.getName();
         String chartType = genChartByAiRequest.getChartType();
+
         //校验
         ThrowUtils.throwIf(StringUtils.isBlank(goal), ErrorCode.PARAMS_ERROR, "目标为空");
         ThrowUtils.throwIf(StringUtils.isNotBlank(name) && name.length() > 100, ErrorCode.PARAMS_ERROR, "名称过长");
@@ -572,7 +577,7 @@ public class ChartController {
         userInput.append(userGoal).append("\n");
         userInput.append("数据：").append("\n");
         String csvData = ExcelUtils.excelTocsv(multipartFile);
-
+        csvDataConstant.setCsvData(csvData);
         userInput.append(csvData).append("\n");
 
 
@@ -582,7 +587,7 @@ public class ChartController {
         Chart chart = new Chart();
         chart.setGoal(goal);
         chart.setName(name);
-        chart.setChartData(csvData);
+//        chart.setChartData(csvData);
         chart.setChartType(chartType);
         chart.setStatus(String.valueOf(ChartStatus.WAIT));
         chart.setUserId(userId);
@@ -590,18 +595,18 @@ public class ChartController {
         ThrowUtils.throwIf(!chartSave, ErrorCode.SYSTEM_ERROR, "图表保存失败");
 
         //用户数据分表保存
-//        chartService.saveChartData(userId, csvData, chartType);
+        chartService.saveChartData(userId, csvData, chartType);
 
         Long newChartid = chart.getId();
         //发送消息
         biMessageProducer.sendMessage(String.valueOf(newChartid));
 
-        //原数据返回给前端
-//        List<Map<String, Object>> data = chartService.getChartDataByUserId(userId);
+//        原数据返回给前端
+        List<Map<String, Object>> data = chartService.getChartDataByUserId(userId);
 
         BiResponse biResponse = new BiResponse();
         biResponse.setChartId(newChartid);
-//        biResponse.setData(data);
+        biResponse.setData(data);
         return ResultUtils.success(biResponse);
     }
 

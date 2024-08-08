@@ -3,11 +3,13 @@ package com.yupi.springbootinit.bizmq;
 import com.rabbitmq.client.Channel;
 import com.yupi.springbootinit.common.ErrorCode;
 import com.yupi.springbootinit.constant.CommonConstant;
+import com.yupi.springbootinit.constant.CsvDataConstant;
 import com.yupi.springbootinit.exception.BusinessException;
 import com.yupi.springbootinit.manager.AiManager;
 import com.yupi.springbootinit.model.entity.Chart;
 import com.yupi.springbootinit.model.enums.ChartStatus;
 import com.yupi.springbootinit.service.ChartService;
+import com.yupi.springbootinit.utils.ExcelUtils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +17,8 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 
@@ -27,6 +31,9 @@ public class BiMessageConsumer {
 
     @Resource
     private AiManager aiManager;
+
+    @Resource
+    private CsvDataConstant csvDataConstant;
 
     // 指定程序监听的消息队列和确认机制
     @SneakyThrows
@@ -87,7 +94,8 @@ public class BiMessageConsumer {
     private String buildUserInput(Chart chart) {
         String goal = chart.getGoal();
         String chartType = chart.getChartType();
-        String csvData=chart.getChartData();
+//        String csvData=chart.getChartData();
+        String csvData = csvDataConstant.getCsvData();
         // 构造用户输入
         StringBuilder userInput = new StringBuilder();
         userInput.append("分析需求：").append("\n");
@@ -99,7 +107,6 @@ public class BiMessageConsumer {
         }
         userInput.append(userGoal).append("\n");
         userInput.append("原始数据：").append("\n");
-
         userInput.append(csvData).append("\n");
         return userInput.toString();
     }
