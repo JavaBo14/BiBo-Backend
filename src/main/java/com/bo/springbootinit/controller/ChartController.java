@@ -179,8 +179,7 @@ public class ChartController {
     public BaseResponse<Page<Chart>> listChartByPageAndAdmin(@RequestBody ChartQueryRequest chartQueryRequest) {
         long current = chartQueryRequest.getCurrent();
         long size = chartQueryRequest.getPageSize();
-        Page<Chart> chartPage = chartService.page(new Page<>(current, size),
-               getQueryWrapper(chartQueryRequest));
+        Page<Chart> chartPage = chartService.page(new Page<>(current, size), getQueryWrapper(chartQueryRequest));
         return ResultUtils.success(chartPage);
     }
 
@@ -198,8 +197,7 @@ public class ChartController {
         long size = chartQueryRequest.getPageSize();
         // 限制爬虫
         ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
-        Page<Chart> chartPage = chartService.page(new Page<>(current, size),
-               getQueryWrapper(chartQueryRequest));
+        Page<Chart> chartPage = chartService.page(new Page<>(current, size), getQueryWrapper(chartQueryRequest));
         return ResultUtils.success(chartPage);
     }
 
@@ -223,14 +221,7 @@ public class ChartController {
         long size = chartQueryRequest.getPageSize();
         // 限制爬虫
         ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
-
-
-
         Page<Chart> chartPage = chartService.page(new Page<>(current, size),getQueryWrapper(chartQueryRequest));
-
-
-
-
         return ResultUtils.success(chartPage);
     }
 
