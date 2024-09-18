@@ -1,7 +1,7 @@
 # 数据库初始化
 
 -- 创建库
-create database if not exists bobi;
+# create database if not exists bobi;
 
 -- 切换库
 use bobi;
@@ -26,7 +26,7 @@ create table if not exists chart
 (
     id           bigint auto_increment comment 'id' primary key,
     goal         text         null     comment '分析目标',
-    'name'      varchar(128)  null     comment '图表名称',
+    name      varchar(128)  null     comment '图表名称',
     chartData    text         null     comment '图表数据',
     chartType    varchar(128) null     comment '图表类型',
     genChart     text         null     comment '生成的图表数据',

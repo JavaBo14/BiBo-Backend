@@ -2,6 +2,8 @@ package com.bo.springbootinit.controller;
 import java.util.Arrays;
 
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bo.springbootinit.common.BaseResponse;
@@ -344,8 +346,9 @@ public class ChartController {
         }
 
         Long userId=loginUser.getId();
-        //用户数据分表保存
+//        用户数据分表保存
         chartService.saveChartData(userId, csvData,chartType);
+//        chartService.save(csvData)
 
         String genChart=splits[1].trim();
         String genResult=splits[2].trim();
