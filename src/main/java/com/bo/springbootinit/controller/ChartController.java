@@ -6,10 +6,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.bo.springbootinit.common.BaseResponse;
-import com.bo.springbootinit.common.DeleteRequest;
-import com.bo.springbootinit.common.ErrorCode;
-import com.bo.springbootinit.common.ResultUtils;
+import com.bo.springbootinit.common.*;
 import com.bo.springbootinit.constant.CommonConstant;
 import com.bo.springbootinit.constant.UserConstant;
 import com.bo.springbootinit.annotation.AuthCheck;
@@ -67,7 +64,8 @@ public class ChartController {
 
     @Resource
     private ChartMapper chartMapper;
-
+    @Resource
+    private UserInput userInput;
     @Resource
     private ThreadPoolExecutor threadPoolExecutor;
 
@@ -295,23 +293,24 @@ public class ChartController {
 //        2号,20
 //        3号,30
         long biModeId=CommonConstant.BI_MODEL_ID;
-        //拼接分析需求
-        StringBuilder userInput=new StringBuilder();
-        userInput.append("分析需求：").append("\n");
-        String userGoal=goal;
-        if (StringUtils.isNotBlank(chartType)){
-            userGoal += "，请使用"+chartType;
-        }
-        userInput.append(userGoal).append("\n");
-        userInput.append("数据：").append("\n");
-        String csvData = ExcelUtils.excelTocsv(multipartFile);
+//        //拼接分析需求
+//        StringBuilder userInput=new StringBuilder();
+//        userInput.append("分析需求：").append("\n");
+//        String userGoal=goal;
+//        if (StringUtils.isNotBlank(chartType)){
+//            userGoal += "，请使用"+chartType;
+//        }
+//        userInput.append(userGoal).append("\n");
+//        userInput.append("数据：").append("\n");
+//        String csvData = ExcelUtils.excelTocsv(multipartFile);
+//
+//        userInput.append(csvData).append("\n");
+        String userInputResult = userInput.buildUserInput(goal, chartType, multipartFile);
 
-        userInput.append(csvData).append("\n");
+        //调用鱼聪明
+//        String result = aiManager.doChat(biModeId, userInput.toString());
 
-       //调用鱼聪明
-        String result = aiManager.doChat(biModeId, userInput.toString());
-
-//      String result = aiManager.sendMesToAIUseXingHuo(userInput.toString());
+      String result = aiManager.sendMsgToXingHuo(true,userInputResult.toString());
 
 //        String result="【【【【【\n" +
 //                "{\n" +
@@ -340,33 +339,33 @@ public class ChartController {
 //                "}\n" +
 //                "【【【【【\n" +
 //                "根据数据分析可得，该网站用户数量逐日增长，时间越长，用户数量增长越多。\n";
-        String[] splits = result.split("【【【【【");
+        String[] splits = result.split("'【【【【【'");
         if (result.length()<3){
         throw new BusinessException(ErrorCode.SYSTEM_ERROR,"Ai生成错误");
         }
 
         Long userId=loginUser.getId();
 //        用户数据分表保存
-        chartService.saveChartData(userId, csvData,chartType);
+//        chartService.saveChartData(userId, csvData,chartType);
 //        chartService.save(csvData)
 
         String genChart=splits[1].trim();
         String genResult=splits[2].trim();
 
 //        //原数据返回给前端
-        List<Map<String, Object>> data = chartService.getChartDataByUserId(userId);
+//        List<Map<String, Object>> data = chartService.getChartDataByUserId(userId);
 
         BiResponse biResponse=new BiResponse();
         biResponse.setGenChart(genChart);
         biResponse.setGenResult(genResult);
-        biResponse.setData(data);
+//        biResponse.setData(data);
 
 
         //生成数据插入数据库
         Chart chart=new Chart();
         chart.setGoal(goal);
         chart.setName(name);
-//        chart.setChartData(csvData);
+        chart.setChartData(csvDataConstant.getCsvData());
         chart.setChartType(chartType);
         chart.setGenChart(genChart);
         chart.setGenResult(genResult);
@@ -449,17 +448,18 @@ public class ChartController {
 //        3号,30
 //        long biModeId = CommonConstant.BI_MODEL_ID;
         //拼接分析需求
-        StringBuilder userInput = new StringBuilder();
-        userInput.append("分析需求：").append("\n");
-        String userGoal = goal;
-        if (StringUtils.isNotBlank(chartType)) {
-            userGoal += "，请使用" + chartType;
-        }
-        userInput.append(userGoal).append("\n");
-        userInput.append("数据：").append("\n");
-        String csvData = ExcelUtils.excelTocsv(multipartFile);
-
-        userInput.append(csvData).append("\n");
+//        StringBuilder userInput = new StringBuilder();
+//        userInput.append("分析需求：").append("\n");
+//        String userGoal = goal;
+//        if (StringUtils.isNotBlank(chartType)) {
+//            userGoal += "，请使用" + chartType;
+//        }
+//        userInput.append(userGoal).append("\n");
+//        userInput.append("数据：").append("\n");
+//        String csvData = ExcelUtils.excelTocsv(multipartFile);
+//
+//        userInput.append(csvData).append("\n");
+        String userInputResult = userInput.buildUserInput(goal, chartType, multipartFile);
 
         Long userId = loginUser.getId();
 
@@ -467,7 +467,7 @@ public class ChartController {
         Chart chart = new Chart();
         chart.setGoal(goal);
         chart.setName(name);
-//        chart.setChartData(csvData);
+        chart.setChartData(csvDataConstant.getCsvData());
         chart.setChartType(chartType);
         chart.setStatus(ChartStatus.WAIT.toLowerCase());
         chart.setUserId(userId);
@@ -475,7 +475,7 @@ public class ChartController {
         ThrowUtils.throwIf(!chartSave, ErrorCode.SYSTEM_ERROR, "图表保存失败");
 
         //用户数据分表保存
-        chartService.saveChartData(userId, csvData, chartType);
+//        chartService.saveChartData(userId, csvData, chartType);
 
         CompletableFuture.runAsync(() -> {
 
@@ -490,9 +490,10 @@ public class ChartController {
                 return;
             }
             //调用鱼聪明
-            String result = aiManager.doChat(CommonConstant.BI_MODEL_ID, userInput.toString());
+//            String result = aiManager.doChat(CommonConstant.BI_MODEL_ID, userInput.toString());
+            String result = aiManager.sendMsgToXingHuo(true,userInputResult.toString());
 
-            String[] splits = result.split("【【【【【");
+            String[] splits = result.split("'【【【【【'");
             if (result.length() < 3) {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "Ai生成错误");
             }
@@ -514,11 +515,11 @@ public class ChartController {
 
 
         //原数据返回给前端
-        List<Map<String, Object>> data = chartService.getChartDataByUserId(userId);
+//        List<Map<String, Object>> data = chartService.getChartDataByUserId(userId);
 
         BiResponse biResponse = new BiResponse();
         biResponse.setChartId(chart.getId());
-        biResponse.setData(data);
+//        biResponse.setData(data);
         return ResultUtils.success(biResponse);
     }
 
@@ -562,18 +563,17 @@ public class ChartController {
 //        3号,30
 //        long biModeId = CommonConstant.BI_MODEL_ID;
         //拼接分析需求
-        StringBuilder userInput = new StringBuilder();
-        userInput.append("分析需求：").append("\n");
-        String userGoal = goal;
-        if (StringUtils.isNotBlank(chartType)) {
-            userGoal += "，请使用" + chartType;
-        }
-        userInput.append(userGoal).append("\n");
-        userInput.append("数据：").append("\n");
-        String csvData = ExcelUtils.excelTocsv(multipartFile);
-        csvDataConstant.setCsvData(csvData);
-        userInput.append(csvData).append("\n");
-
+//        StringBuilder userInput = new StringBuilder();
+//        userInput.append("分析需求：").append("\n");
+//        String userGoal = goal;
+//        if (StringUtils.isNotBlank(chartType)) {
+//            userGoal += "，请使用" + chartType;
+//        }
+//        userInput.append(userGoal).append("\n");
+//        userInput.append("数据：").append("\n");
+//        String csvData = ExcelUtils.excelTocsv(multipartFile);
+//        userInput.append(csvData).append("\n");
+        String userInputResult = userInput.buildUserInput(goal, chartType, multipartFile);
 
         Long userId = loginUser.getId();
 
@@ -581,7 +581,7 @@ public class ChartController {
         Chart chart = new Chart();
         chart.setGoal(goal);
         chart.setName(name);
-//        chart.setChartData(csvData);
+        chart.setChartData(csvDataConstant.getCsvData());
         chart.setChartType(chartType);
         chart.setStatus(ChartStatus.WAIT.toLowerCase());
         chart.setUserId(userId);
@@ -589,18 +589,18 @@ public class ChartController {
         ThrowUtils.throwIf(!chartSave, ErrorCode.SYSTEM_ERROR, "图表保存失败");
 
         //用户数据分表保存
-        chartService.saveChartData(userId, csvData, chartType);
+//        chartService.saveChartData(userId, csvData, chartType);
 
         Long newChartid = chart.getId();
         //发送消息
         biMessageProducer.sendMessage(String.valueOf(newChartid));
 
 //        原数据返回给前端
-        List<Map<String, Object>> data = chartService.getChartDataByUserId(userId);
+//        List<Map<String, Object>> data = chartService.getChartDataByUserId(userId);
 
         BiResponse biResponse = new BiResponse();
         biResponse.setChartId(newChartid);
-        biResponse.setData(data);
+//        biResponse.setData(data);
         return ResultUtils.success(biResponse);
     }
 
@@ -615,6 +615,7 @@ public class ChartController {
             log.error("更新图表失败状态失败" + chartId + "," + execMessage);
         }
     }
+
 
     /**
      * 获取查询包装类

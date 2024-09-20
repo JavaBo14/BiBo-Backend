@@ -3,42 +3,34 @@ package com.bo.springbootinit.bizmq;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import org.springframework.stereotype.Component;
-import javax.annotation.PostConstruct;
 
 /**
  * 用于创建测试程序用到的交换机和队列（只用在程序启动前执行一次）
  */
 
-
-@Component
 public class BiInitMain {
-    @PostConstruct
-    public void init() {
+
+    public static void main(String[] args) {
         try {
+            //创建交换机
             ConnectionFactory factory = new ConnectionFactory();
             factory.setHost("localhost");
+//            factory.setHost("118.89.115.174"); // 仅 IP 地址或主机名，不要 http://
+//            factory.setPort(5672); // 设置 RabbitMQ 的 AMQP 端口，默认是 5672
+//            factory.setUsername("guest"); // 设置 RabbitMQ 用户名
+//            factory.setPassword("guest"); // 设置 RabbitMQ 密码
             Connection connection = factory.newConnection();
             Channel channel = connection.createChannel();
-            String EXCHANGE_NAME = "your_exchange";
-            String queueName = "your_queue";
-            // 检查并声明交换机
-            try {
-                channel.exchangeDeclare(EXCHANGE_NAME, "direct", true);
-            } catch (Exception e) {
-                System.out.println("交换机声明时出现问题: " + e.getMessage());
-            }
-            // 检查并声明队列
-            try {
-                channel.queueDeclarePassive(queueName);
-            } catch (Exception e) {
-                // 如果队列不存在则创建
-                channel.queueDeclare(queueName, true, false, false, null);
-            }
-            // 绑定队列和交换机
-            channel.queueBind(queueName, EXCHANGE_NAME, "your_routing_key");
+            String EXCHANGE_NAME =  BiMqConstant.BI_EXCHANGE_NAME;
+            channel.exchangeDeclare(EXCHANGE_NAME, "direct");
+
+            // 创建队列，随机分配一个队列名称
+            String queueName = BiMqConstant.BI_QUEUE_NAME;
+            channel.queueDeclare(queueName, true, false, false, null);
+            channel.queueBind(queueName, EXCHANGE_NAME,  BiMqConstant.BI_ROUTING_KEY);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("error");
         }
+
     }
 }

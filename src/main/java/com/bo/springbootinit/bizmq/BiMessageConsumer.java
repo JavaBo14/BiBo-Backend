@@ -58,10 +58,12 @@ public class BiMessageConsumer {
             handleChartUpdateError(chart.getId(), "更新图表执行中状态失败");
             return;
         }
-        //调用鱼聪明
-        String result = aiManager.doChat(CommonConstant.BI_MODEL_ID, buildUserInput(chart));
+        String result = aiManager.sendMsgToXingHuo(true,buildUserInput(chart));
 
-        String[] splits = result.split("【【【【【");
+        //调用鱼聪明
+//        String result = aiManager.doChat(CommonConstant.BI_MODEL_ID, buildUserInput(chart));
+
+        String[] splits = result.split("'【【【【【'");
         if (result.length() < 3) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "Ai生成错误");
         }

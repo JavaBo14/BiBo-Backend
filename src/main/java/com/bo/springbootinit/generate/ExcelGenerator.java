@@ -27,7 +27,12 @@ public class ExcelGenerator {
         Object[][] data = {
                 {1, "John Doe", 30},
                 {2, "Jane Smith", 25},
-                {3, "Mike Johnson", 35}
+                {3, "Mike Johnson", 15},
+                {4, "Mike", 16},
+                {5, "Johnson", 19},
+                {6, "Mikhnson", 30},
+                {7, "Mson", 45},
+                {8, "Mbon", 50}
         };
 
         int rowNum = 1;
