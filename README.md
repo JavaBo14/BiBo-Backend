@@ -1,4 +1,4 @@
-<h1 align="center">BI开发中~</h1>
+<h1 align="center">BI已上线，优化中~</h1>
 <p align="center">
   <img src="https://img.shields.io/github/languages/code-size/JavaBo14/Bo" alt="code size"/>
   <img src="https://img.shields.io/badge/Spring%20Boot-2.5.4-brightgreen" alt="Spring Boot"/>
