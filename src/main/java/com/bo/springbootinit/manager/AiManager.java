@@ -125,7 +125,7 @@ public class AiManager {
                 // 模型回答的tokens的最大长度,非必传,取值为[1,4096],默认为2048
                 .maxTokens(2048)
                 // 核采样阈值。用于决定结果随机性,取值越高随机性越强即相同的问题得到的不同答案的可能性越高 非必传,取值为[0,1],默认为0.5
-                .temperature(0.2)
+                .temperature(0.1)
                 // 指定请求版本，默认使用最新2.0版本
                 .apiVersion(SparkApiVersion.V3_5)
                 .build();

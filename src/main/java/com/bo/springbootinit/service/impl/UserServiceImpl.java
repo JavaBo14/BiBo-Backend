@@ -71,6 +71,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             // 3. 插入数据
             User user = new User();
             user.setUserAccount(userAccount);
+            user.setUserName(userAccount);
             user.setUserPassword(encryptPassword);
             user.setUserAvatar("https://s2.loli.net/2024/09/14/7zJjfsiIFlW54dM.png");
             boolean saveResult = this.save(user);

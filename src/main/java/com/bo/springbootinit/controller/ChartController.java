@@ -272,14 +272,6 @@ public class ChartController {
         //校验
         ThrowUtils.throwIf(StringUtils.isBlank(goal),ErrorCode.PARAMS_ERROR,"目标为空");
         ThrowUtils.throwIf(StringUtils.isNotBlank(name) && name.length()>100,ErrorCode.PARAMS_ERROR,"名称过长");
-        //校验文件大小
-        long size = multipartFile.getSize();
-        String originalFilename = multipartFile.getOriginalFilename();
-        ThrowUtils.throwIf(size> CommonConstant.ONE_MB,ErrorCode.PARAMS_ERROR,"目标文件过大");
-        //检查文件后缀
-        String suffix = FileUtil.getSuffix(originalFilename);
-        final List<String> suffixList= Arrays.asList("xlsx","xls");
-        ThrowUtils.throwIf(!suffixList.contains(suffix),ErrorCode.PARAMS_ERROR,"文件格式错误");
 
         User loginUser = userService.getLoginUser(request);
 
@@ -426,14 +418,6 @@ public class ChartController {
         //校验
         ThrowUtils.throwIf(StringUtils.isBlank(goal), ErrorCode.PARAMS_ERROR, "目标为空");
         ThrowUtils.throwIf(StringUtils.isNotBlank(name) && name.length() > 100, ErrorCode.PARAMS_ERROR, "名称过长");
-        //校验文件大小
-        long size = multipartFile.getSize();
-        String originalFilename = multipartFile.getOriginalFilename();
-        ThrowUtils.throwIf(size > CommonConstant.ONE_MB, ErrorCode.PARAMS_ERROR, "目标文件过大");
-        //检查文件后缀
-        String suffix = FileUtil.getSuffix(originalFilename);
-        final List<String> suffixList = Arrays.asList("xlsx", "xls");
-        ThrowUtils.throwIf(!suffixList.contains(suffix), ErrorCode.PARAMS_ERROR, "文件格式错误");
 
         User loginUser = userService.getLoginUser(request);
 
@@ -541,14 +525,6 @@ public class ChartController {
         //校验
         ThrowUtils.throwIf(StringUtils.isBlank(goal), ErrorCode.PARAMS_ERROR, "目标为空");
         ThrowUtils.throwIf(StringUtils.isNotBlank(name) && name.length() > 100, ErrorCode.PARAMS_ERROR, "名称过长");
-        //校验文件大小
-        long size = multipartFile.getSize();
-        String originalFilename = multipartFile.getOriginalFilename();
-        ThrowUtils.throwIf(size > CommonConstant.ONE_MB, ErrorCode.PARAMS_ERROR, "目标文件过大");
-        //检查文件后缀
-        String suffix = FileUtil.getSuffix(originalFilename);
-        final List<String> suffixList = Arrays.asList("xlsx", "xls");
-        ThrowUtils.throwIf(!suffixList.contains(suffix), ErrorCode.PARAMS_ERROR, "文件格式错误");
 
         User loginUser = userService.getLoginUser(request);
 
